@@ -11,8 +11,6 @@
 #include <complex>
 #include <algorithm>
 #include <functional>
-#include <thread>
-#include <mutex> 
 
 #include <stdlib.h>
 #include <math.h>
@@ -20,7 +18,6 @@
 
 #include "Matrix.h"
 #include "systab.h"
-#include <modbus.h>
  
 using std::cout;
 using namespace std::complex_literals;
@@ -38,11 +35,6 @@ using matr = vector<vd>;
 
 void cinv( Matrix RealA, Matrix ImagA, Matrix& RealAinv, Matrix& ImagAinv);
 void zdatas(int num, vd zd[], vd out[], int bus, matr G, matr B, matr bbus, bool hitlflag);
-int server();
-
-// data shared to server
-vd V_data, del_data;
-std::mutex mtx;
 
 void subtract(const vd &a, const vd &b, vd &c)
 {
@@ -113,76 +105,6 @@ double sumVector(vd A)
         s+=A[j];
     return s;    
 }
-/*----------------------------------------------------------------------------------*/
-int get1 (double x){ return int(x); }
-int get2 (double x) {return int (0.5 + 100000*(x-get1(x)));}
-
-void modbus_write_test(modbus_mapping_t *mb_mapping)
-
-{
-    mtx.lock();
-    if (V_data.empty()) {
-       mtx.unlock();
-       return;
-    }
-    
-    // 14-bus system HITL
-    for (unsigned int i=0; i < 5; i++) {
-        mb_mapping->tab_registers[i] = get1(V_data[i]*6900);
-    }
-    mb_mapping->tab_registers[5] = get1(V_data[5]*1380);
-    mb_mapping->tab_registers[6] = get1(V_data[6]*1380);
-    mb_mapping->tab_registers[7] = get1(V_data[7]*1800);
-    for (unsigned int i=8; i < 14; i++) {
-        mb_mapping->tab_registers[i] = get1(V_data[i]*1380);
-    }
-    mtx.unlock();
-}
-
-
-int server()
-{
-    int s = -1;
-    modbus_t *ctx;
-    modbus_mapping_t *mb_mapping = nullptr;
-
-    ctx = modbus_new_tcp("192.168.1.3", 1502);
-    mb_mapping = modbus_mapping_new(0, 0, 20, 0);
-
-    s = modbus_tcp_listen(ctx, 1);
-    modbus_tcp_accept(ctx, &s);
-
-    //modbus_read_test(ctx);
-
-    for (;;) {
-        uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
-        int rc;
-
-        rc = modbus_receive(ctx, query);
-
-        if (rc > 0) { // rc is the query size
-            modbus_write_test(mb_mapping);
-            //modbus_read_test(mb_mapping);
-            modbus_reply(ctx, query, rc, mb_mapping);
-        } else if (rc == -1) { // Connection closed by the client or error
-            break;
-        }
-    }
-
-    cout << "Quit the loop: " << modbus_strerror(errno) << endl;
-
-    if (s != -1) {
-        close(s);
-    }
-    modbus_mapping_free(mb_mapping);
-    modbus_close(ctx);
-    modbus_free(ctx);
-
-    return 0;
-}
-
-/*----------------------------------------------------------------------------------*/
-
 
 
 int main(int argc, char* argv[])
@@ -280,9 +202,6 @@ try
 
     vd zd[6], out[2];
 
-    std::thread * tserver = nullptr;
-    if (hitlflag)
-        tserver = new std::thread(server);
 
     for(int runs=0; runs<1000000; runs++) {
 
@@ -734,21 +653,11 @@ try
             cout << string(3,' ') << i+1 << string(3,' ') << V[i] << string(3,' ') << del[i] << "\n";
         cout << "---------------------------------------------" << endl;
 
-
-        mtx.lock();
-        V_data = V;
-        del_data = del;
-        mtx.unlock();
         V.clear();
         del.clear();
         E.clear();
     }
 
-    if( tserver )
-    {
-        tserver->join();
-        delete tserver;
-    }
 
     return 0;
 }

@@ -8,11 +8,12 @@ then
 
     read -p "Provide commit message: "
 	# Set git to use the credential memory cache
-	#git config --global credential.helper cache
+	git config --global credential.helper cache
 
 	# Set the cache to timeout after 4 hours (setting is in seconds)
 	#git config --global credential.helper 'cache --timeout=14400'
-
+	git config --global credential.helper 'cache --timeout=28800'
+	
 	#stage new and modified files
 	git add .
 
