@@ -136,7 +136,7 @@ try
 
     
     //Form Admittance (Y) And Impedance (Z) (inv(ybus)) Bus Formation
-    unsigned int i,j,m,n,k;
+    unsigned int i,j,m,n;
     unsigned int size_z = sn->line.size();
     vd r,x,fb,tb,a;
     vc z,y,b;
@@ -222,7 +222,7 @@ try
     double tol = 5.0;
     unsigned int QG;
 
-    while (iter < 5) {
+    while (tol > 1e-5) {
         
         vd P(N,0), Q(N,0);
 
@@ -284,8 +284,6 @@ try
         i = J1.size()+J3.size();            
         matr J(i);
         
-
-
        // J1 - Derivative of Real Power Injection with respect to angles.
         for(i=0;i<N-1;i++) {
             m = i+1;
@@ -303,9 +301,131 @@ try
             }
         }
 
+        for(i=0;i<N-1;i++) {
+            m = i+1;
+            for(j=0;j<pq.size();j++){
+                n = pq[j] -1;
+                if (n < 0) n = 0;
+                if (m == n) {
+                    for(k=0;k<N;k++){
+                        J2[i][j] = J2[i][j] + V[k]*(G[m][k]*cos(del[m]-del[k]) + B[m][k]*sin(del[m]-del[k]));
+                    }
+                    J2[i][j] = J2[i][j] + V[m]*G[m][m];  
+                }
+                else {
+                    J2[i][j] = V[m]*(G[m][n]*cos(del[m]-del[n]) - B[m][n]*sin(del[m]-del[n]));
+                }    
+            }
+        }
+
+        for(i=0;i<pq.size();i++) {
+            m = pq[i] - 1;
+            if (m < 0) m = 0;
+            for(j=0;j<N-1;j++){
+                n = j+1;
+                if (m == n) {
+                    for(k=0;k<N;k++){
+                        J3[i][j] = J3[i][j] + V[m]*V[k]*(G[m][k]*cos(del[m]-del[k]) + B[m][k]*sin(del[m]-del[k]));
+                    }
+                    J3[i][j] = J3[i][j] - V[m]*V[m]*G[m][m];  
+                }
+                else {
+                    J3[i][j] = V[m]*V[n]*(-G[m][n]*cos(del[m]-del[n]) - B[m][n]*sin(del[m]-del[n]));
+                }    
+            }
+        }
+
+        for(i=0;i<pq.size();i++) {
+            m = pq[i] - 1;
+            if (m < 0) m = 0;
+            for(j=0;j<pq.size();j++){
+                n = pq[j] -1;
+                if (n < 0) n = 0;
+                if (m == n) {
+                    for(k=0;k<N;k++){
+                        J4[i][j] = J4[i][j] + V[k]*(G[m][k]*sin(del[m]-del[k]) - B[m][k]*cos(del[m]-del[k]));
+                    }
+                    J4[i][j] = J4[i][j] - V[m]*B[m][m];  
+                }
+                else {
+                    J4[i][j] = V[m]*(G[m][n]*sin(del[m]-del[n]) - B[m][n]*cos(del[m]-del[n]));
+                }    
+            }
+        }
+
+        // Jacobian J
+        for(i=0;i<J1.size();i++) {
+            J[i].insert(J[i].end(), J1[i].begin(), J1[i].end());
+            J[i].insert(J[i].end(), J2[i].begin(), J2[i].end());
+        }
+        unsigned int tmp = J1.size();
+        for(i=0;i<J3.size();i++) {
+            J[tmp+i].insert(J[tmp+i].end(), J3[i].begin(), J3[i].end());
+            J[tmp+i].insert(J[tmp+i].end(), J4[i].begin(), J4[i].end());
+        }
         
+        // calc inv(J)
+        unsigned int size_J = J.size();
 
+        Matrix RealA1(size_J,size_J);
+        Matrix ImagA1(size_J,size_J);
+        Matrix RealA1inv(size_J,size_J);
+        Matrix ImagA1inv(size_J,size_J);
 
+        for (i=0; i<size_J; i++){
+            for (j=0; j<size_J; j++){
+                RealA1(i+1,j+1) = J[i][j];
+                ImagA1(i+1,j+1) = 0;
+            }   
+        }
+        cinv(RealA1, ImagA1, RealA1inv, ImagA1inv);
+
+        matr invJ(size_J,vd(size_J));
+
+        for (i=0; i<size_J; i++){
+            for (j=0; j<size_J; j++){
+                invJ[i][j] = RealA1inv(i+1,j+1);
+            }   
+        }
+
+        //Correction vector
+        vd X;
+        vecmultiply(invJ,M,X);
+
+        // Change in voltage angle & voltage magnitude
+        vd dTh,dV;
+        dTh.insert(dTh.end(), X.begin(), X.begin()+N-1);
+        dV.insert(dV.end(), X.begin()+N-1, X.end());
+
+        // Updating state vectors
+
+        // Voltage angle
+        for (i=1; i<N; i++){
+            del[i]+=dTh[i-1];
+        }
+
+        // Voltage magnitude
+        k = 0;
+        for (i=1; i<N; i++) {
+            if (typeb[i] == 3) {
+                V[i]+=dV[k];
+                k+=1;
+            }
+        }
+
+        vd absM(M.size());
+        for (i = 0; i < M.size(); i++){
+            if (M[i] < 0) 
+                absM[i] = (-1)*M[i];
+            else
+                absM[i] = M[i];
+        }
+        
+        tol = *max_element(absM.begin(), absM.end());
+
+        cout << tol << endl;
+        printVector(V);
+        printVector(del);
         iter+=1;
     }    
 

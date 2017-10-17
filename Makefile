@@ -6,11 +6,9 @@
 #CPP = g++
 DEBUG = -g
 CPP_ANSI_OPTS = -std=c++14
-PTHREAD=-pthread
 RM=rm -f
 EIGEN = `pkg-config --libs --cflags eigen3`
 EIGEN1 = -I /usr/local/include/eigen3
-LDFLAGS=$(PTHREAD)
 CPPFLAGS = -Wall $(DEBUG) $(CPP_ANSI_OPTS)
 SRC_DIR = src
 
