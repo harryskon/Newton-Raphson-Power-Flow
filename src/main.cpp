@@ -136,7 +136,7 @@ try
 
     
     //Form Admittance (Y) And Impedance (Z) (inv(ybus)) Bus Formation
-    unsigned int i,j;
+    unsigned int i,j,m,n,k;
     unsigned int size_z = sn->line.size();
     vd r,x,fb,tb,a;
     vc z,y,b;
@@ -247,6 +247,63 @@ try
             }
         }
 
+        // Calculate change from specified value
+        vd dPa(P.size());
+        vd dQa(Q.size());
+
+        subtract(Psp,P,dPa);
+        subtract(Qsp,Q,dQa);
+
+        unsigned int k=0;
+        vd dQ(pq.size(),0);
+        vd dP;
+
+        for (i=0; i<N; i++) {
+            if (typeb[i] == 3) {
+                dQ[k] = dQa[i];
+                k+=1;
+            }
+        }
+ 
+        dP.insert(dP.end(), dPa.begin()+1, dPa.end());
+
+        // Mismatch vector
+        vd M;
+
+        M.insert(M.end(), dP.begin(), dP.end());
+        M.insert(M.end(), dQ.begin(), dQ.end());
+
+        // Jacobian..
+        
+        matr J1(N-1,vd(N-1,0));
+        matr J2(N-1,vd(pq.size(),0));
+        matr J3(pq.size(),vd(N-1,0));
+        matr J4(pq.size(),vd(pq.size(),0));
+
+
+        i = J1.size()+J3.size();            
+        matr J(i);
+        
+
+
+       // J1 - Derivative of Real Power Injection with respect to angles.
+        for(i=0;i<N-1;i++) {
+            m = i+1;
+            for(j=0;j<N-1;j++){
+                n = j+1;
+                if (m == n) {
+                    for(k=0;k<N;k++){
+                        J1[i][j] = J1[i][j] + V[m]*V[k]*(-G[m][k]*sin(del[m]-del[k]) + B[m][k]*cos(del[m]-del[k]));
+                    }
+                    J1[i][j] = J1[i][j] - V[m]*V[m]*B[m][m];  
+                }
+                else {
+                    J1[i][j] = V[m]*V[n]*(G[m][n]*sin(del[m]-del[n]) - B[m][n]*cos(del[m]-del[n]));
+                }    
+            }
+        }
+
+        
 
 
         iter+=1;
