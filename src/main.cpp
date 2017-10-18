@@ -92,6 +92,16 @@ void printMatrix(matr A)
     cout << endl;
 }
 
+void cprintMatrix(vector<vc> A) 
+{
+    for (unsigned int i=0; i<A.size(); i++) {
+        for (unsigned int j=0; j<A[0].size(); j++)
+            cout << A[i][j] << "\t";
+        cout << "\n";
+    }
+    cout << endl;
+}
+
 void printVector(vd A) 
 {
     for (unsigned int j=0; j<A.size(); j++)
@@ -124,6 +134,24 @@ double sumVector(vd A)
     return s;    
 }
 
+std::complex<double> csumMatrix(vector<vc> A)
+{
+    std::complex<double> s = 0. + 0i;
+    for (unsigned int i=0; i<A.size(); i++) {
+        for (unsigned int j=0; j<A[0].size(); j++)
+            s+=A[i][j];
+    }
+    return s;    
+}
+
+std::complex<double> csumVector(vc A)
+{
+    std::complex<double> s = 0. + 0i;
+    for (unsigned int j=0; j<A.size(); j++)
+        s+=A[j];
+    return s;    
+}
+
 
 int main(int argc, char* argv[])
 try 
@@ -144,6 +172,7 @@ try
 
     unsigned int N=atoi(argv[1]);
     const unsigned int bMVA = 100;
+    const std::complex<double> cbMVA = bMVA;
 
     if (N==14)
         sn = &s14;
@@ -438,7 +467,7 @@ try
         
         tol = *max_element(absM.begin(), absM.end());
 
-        cout << tol << endl;
+        //cout << tol << endl;
 
         iter+=1;
     }    
@@ -455,7 +484,9 @@ try
         f = 180/M_PI*f;
     }
 
-    matr Zeta(N,vd(10,0)), Iij(N,vd(N,0)), Sij(N,vd(N,0));
+    matr Zeta(N,vd(10,0));
+    vector<vc> Iij(N,vc(N,0)), Sij(N,vc(N,0));;
+
     vd Si(N,0);
 
     // Bus current injections
@@ -470,6 +501,29 @@ try
     }
 
     // Line Current Flows
+    for (i=0; i<nl; i++) {
+        Iij[int(fb[i])-1][int(tb[i])-1] = - (Vm[int(fb[i])-1] - Vm[int(tb[i])-1])*ybus[int(fb[i])-1][int(tb[i])-1];
+        Iij[int(tb[i])-1][int(fb[i])-1] = - Iij[int(fb[i])-1][int(tb[i])-1];
+    }
+
+    // Line Power Flows
+    for (i=0; i<N; i++) {
+        for (j=0; j<N; j++) {
+            if (i != j) {
+                Sij[i][j] = Vm[i]*(std::conj(Iij[i][j]))*cbMVA; 
+            }
+        }
+    }
+
+    //cout << csumMatrix(Sij) << endl;
+
+
+
+
+
+
+
+
 
         
 
