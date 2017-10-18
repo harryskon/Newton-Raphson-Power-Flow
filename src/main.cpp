@@ -484,10 +484,8 @@ try
         f = 180/M_PI*f;
     }
 
-    matr Zeta(N,vd(10,0));
+    matr Zeta(size_z,vd(10,0));
     vector<vc> Iij(N,vc(N,0)), Sij(N,vc(N,0));;
-
-    vd Si(N,0);
 
     // Bus current injections
     vc I;
@@ -515,8 +513,60 @@ try
         }
     }
 
-    //cout << csumMatrix(Sij) << endl;
+    m = 0;
+    n = 0;
+    for (i=0; i<N; i++) {
+        for (j=0; j<N; j++) {
+            if (j > i) {
+                if (Sij[i][j] != (0. + 0i)) {
+                    Zeta[m][0] = i+1;
+                    Zeta[m][1] = j+1;
+                    Zeta[m][2] = Sij[i][j].real();
+                    Zeta[m][3] = Sij[i][j].imag();
+                    m+=1;
+                }
+            }    
+            else if (i > j) {
+                if (Sij[i][j] != (0. + 0i)) {
+                    Zeta[n][4] = i+1;
+                    Zeta[n][5] = j+1;
+                    Zeta[n][6] = Sij[i][j].real();
+                    Zeta[n][7] = Sij[i][j].imag();
+                    n+=1;
+                }
+            }    
+        }
+    }
+    
+    // Line losses
+    vc Lij;
+    for (i=0; i<nl; i++) {
+        Lij.push_back(Sij[int(fb[i])-1][int(tb[i])-1] + Sij[int(tb[i])-1][int(fb[i])-1]);
+        Zeta[i][8] = Lij[i].real();
+        Zeta[i][9] = Lij[i].imag();
+    }
 
+    // Bus power injections
+    vc Si(N,0);
+    for (i=0; i<N; i++) {
+        for (j=0; j<N; j++) {
+            Si[i] += (std::conj(Vm[i]))*Vm[j]*ybus[i][j]*cbMVA; 
+        }
+    }
+
+    vd Pi, Qi;
+    for (i=0; i<N; i++) {
+        Pi.push_back(Si[i].real());
+        Qi.push_back(-Si[i].imag());
+    }
+/*
+    add(Pi, Pl, Pg);
+    add(Qi, Ql, Qg);
+
+    cout << sumVector(Pg) << endl;
+    cout << sumVector(Qg) << endl;
+
+*/
 
 
 
