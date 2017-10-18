@@ -11,6 +11,7 @@
 #include <complex>
 #include <algorithm>
 #include <functional>
+#include <iomanip>
 
 #include <stdlib.h>
 #include <math.h>
@@ -558,15 +559,50 @@ try
     for (i=0; i<N; i++) {
         Pi.push_back(Si[i].real());
         Qi.push_back(-Si[i].imag());
+        Pl[i]*=bMVA;
+        Ql[i]*=bMVA;
     }
-/*
+
     add(Pi, Pl, Pg);
     add(Qi, Ql, Qg);
 
-    cout << sumVector(Pg) << endl;
-    cout << sumVector(Qg) << endl;
-
-*/
+    double Lijtotalp = 0, Lijtotalq = 0;
+    for (i=0; i<Zeta.size(); i++) {
+        Lijtotalp += Zeta[i][8];
+        Lijtotalq += Zeta[i][9];
+    }
+    cout << "#######################################################################################################" << endl;
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    cout << "--------------------------------Newton Raphson Loadflow Analysis---------------------------------------" << endl;
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    cout << "| Bus |    V   |   Angle    |          Injection         |          Generation       |      Load      |" << endl;
+    cout << "| No  |   pu   |   Degree   |      MW     |     MVar     |     MW      |     MVar    |   MW   |  MVar |" << endl;
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    for(i=0; i<N; i++) {
+        cout << std::setw(4) << i+1 << std::setw(11) << V[i] << std::setw(12) << del[i] << std::setw(14) << Pi[i];
+        cout << std::setw(15) << Qi[i] << std::setw(14) << Pg[i] << std::setw(14) << Qg[i];
+        cout << std::setw(8) << Pl[i] << std::setw(8) << Ql[i] << "\n";
+    }
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Total" << std::setw(36) << sumVector(Pi) << std::setw(15) << sumVector(Qi) << std::setw(14);
+    cout << sumVector(Pg) << std::setw(14) << sumVector(Qg) << std::setw(8);
+    cout << sumVector(Pl) << std::setw(8) << sumVector(Ql) << "\n";
+    cout << endl;
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    cout << "--------------------------------------Line Flow and Losses---------------------------------------------" << endl;
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    cout << "| From | To  |     P      |     Q     | From | To  |     P      |    Q      |        Line Loss        |" << endl;
+    cout << "| Bus  | Bus |    MW      |    MVar   | Bus  | Bus |     MW     |   MVar    |     MW      |    MVar   |" << endl;
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    for(i=0; i<nl; i++) {
+        cout << std::setw(4) << Zeta[i][0] << std::setw(7) << Zeta[i][1] << std::setw(14) << Zeta[i][2] << std::setw(12) << Zeta[i][3];
+        cout << std::setw(5) << Zeta[i][4] << std::setw(7) << Zeta[i][5] << std::setw(14) << Zeta[i][6];
+        cout << std::setw(12) << Zeta[i][7] << std::setw(14) << Zeta[i][8] << std::setw(12) << Zeta[i][9] << "\n";
+    }
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    cout << "Total" << std::setw(84) << Lijtotalp << std::setw(12) << Lijtotalq << "\n";
+    cout << "-------------------------------------------------------------------------------------------------------" << endl;
+    cout << "#######################################################################################################" << endl;
 
 
 
