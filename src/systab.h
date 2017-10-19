@@ -5,7 +5,7 @@
 /*----------------------------------------------------*/
 struct SysTable
 {
-	enum Typs { S14, S30 } typs; // system
+	enum Typs { S14, S30, S57 } typs; // system
 	enum Typt { BUS, LINE } typt; // table
 	const double * data;
 	int sz, cnum;

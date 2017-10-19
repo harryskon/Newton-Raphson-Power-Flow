@@ -169,6 +169,7 @@ try
     
     SysData s14(SysTable::S14);
     SysData s30(SysTable::S30);
+    SysData s57(SysTable::S57);
     SysData * sn;
 
     unsigned int N=atoi(argv[1]);
@@ -179,6 +180,8 @@ try
         sn = &s14;
     else if (N==30)
         sn = &s30;
+    else if (N==57)
+        sn = &s57;
     else
         throw "Bad input IEEE system argument";
 
@@ -254,7 +257,6 @@ try
     subtract(Pg,Pl,Psp);
     subtract(Qg,Ql,Qsp);
 
-
     vd pv,pq;
 
     for(i=0; i<typeb.size(); i++) {
@@ -302,18 +304,21 @@ try
         subtract(Psp,P,dPa);
         subtract(Qsp,Q,dQa);
 
+        
+
         unsigned int k=0;
-        vd dQ(pq.size(),0);
-        vd dP;
+        //vd dQ(pq.size(),0);
+        vd dP,dQ;
 
         for (i=0; i<N; i++) {
             if (typeb[i] == 3) {
-                dQ[k] = dQa[i];
-                k+=1;
+                dQ.push_back(dQa[i]);
             }
         }
  
         dP.insert(dP.end(), dPa.begin()+1, dPa.end());
+
+       
 
         // Mismatch vector
         vd M;
@@ -412,6 +417,7 @@ try
             J[tmp+i].insert(J[tmp+i].end(), J4[i].begin(), J4[i].end());
         }
         
+
         // calc inv(J)
         unsigned int size_J = J.size();
 
@@ -435,7 +441,6 @@ try
                 invJ[i][j] = RealA1inv(i+1,j+1);
             }   
         }
-
         //Correction vector
         vd X;
         vecmultiply(invJ,M,X);
@@ -474,6 +479,9 @@ try
     }    
 
     // Loadflow: Bus power injections, line & power flows
+
+    //cout << sumVector(V) << endl;
+    //cout << sumVector(del) << endl;
 
     unsigned int nl=fb.size();
     
