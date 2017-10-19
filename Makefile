@@ -20,12 +20,11 @@ else
 	$(error Please install gcc/g++ 4.9 or greater)
 endif
 
-
 SOURCES= $(wildcard $(SRC_DIR)/*.cpp)
 EXECUTABLE=nrpowerflow
     
 $(EXECUTABLE): 
-	$(CPP) $(CPPFLAGS) $(LDFLAGS) $(SOURCES) -o $@ $(EIGEN)
+	$(CPP) $(CPPFLAGS) $(LDFLAGS) $(SOURCES) -o $@
 
 .PHONY : $(EXECUTABLE) clean
 

@@ -46,19 +46,6 @@ void add(const vd &a, const vd &b, vd &c)
     transform(a.begin(),a.end(),b.begin(),c.begin(), [] (double a, double b) { return a + b; });
 }
 
-void multiply(const vd &a, const vd &b, vd &c)
-{
-    transform(a.begin(),a.end(),b.begin(),c.begin(), [] (double a, double b) { return a*b; });
-}
-
-double matrmultiply(matr A, matr B, int i, int j)
-{
-    double val= 0;
-    for (unsigned int k = 0; k < A[0].size(); k++)
-        val += (A[i][k])*(B[k][j]);
-    return val;
-}
-
 void vecmultiply(matr A, vd &B, vd &C)
 {
     C.clear();
@@ -187,7 +174,7 @@ try
 
     
     //Form Admittance (Y) And Impedance (Z) (inv(ybus)) Bus Formation
-    unsigned int i,j,m,n;
+    unsigned int i,j,m,n,k;
     unsigned int size_z = sn->line.size();
     vd r,x,fb,tb,a;
     vc z,y,b;
@@ -233,7 +220,6 @@ try
         }
     }
 
-    
     // Get bus data
     unsigned int size_b = sn->bus.size();
     vd bus, typeb, V, del, Pg, Qg, Pl, Ql, Qmin, Qmax;
@@ -304,10 +290,6 @@ try
         subtract(Psp,P,dPa);
         subtract(Qsp,Q,dQa);
 
-        
-
-        unsigned int k=0;
-        //vd dQ(pq.size(),0);
         vd dP,dQ;
 
         for (i=0; i<N; i++) {
@@ -318,8 +300,6 @@ try
  
         dP.insert(dP.end(), dPa.begin()+1, dPa.end());
 
-       
-
         // Mismatch vector
         vd M;
 
@@ -327,7 +307,6 @@ try
         M.insert(M.end(), dQ.begin(), dQ.end());
 
         // Jacobian..
-        
         matr J1(N-1,vd(N-1,0));
         matr J2(N-1,vd(pq.size(),0));
         matr J3(pq.size(),vd(N-1,0));
@@ -337,7 +316,7 @@ try
         i = J1.size()+J3.size();            
         matr J(i);
         
-       // J1 - Derivative of Real Power Injection with respect to angles.
+        // J1 - Derivative of Real Power Injection with respect to angles.
         for(i=0;i<N-1;i++) {
             m = i+1;
             for(j=0;j<N-1;j++){
@@ -353,7 +332,7 @@ try
                 }    
             }
         }
-
+        // J2 - Derivative of Real Power Injections with V..
         for(i=0;i<N-1;i++) {
             m = i+1;
             for(j=0;j<pq.size();j++){
@@ -371,6 +350,7 @@ try
             }
         }
 
+        // J3 - Derivative of Reactive Power Injections with Angles..
         for(i=0;i<pq.size();i++) {
             m = pq[i] - 1;
             if (m < 0) m = 0;
@@ -388,6 +368,7 @@ try
             }
         }
 
+        // J4 - Derivative of Reactive Power Injections with V..
         for(i=0;i<pq.size();i++) {
             m = pq[i] - 1;
             if (m < 0) m = 0;
@@ -470,19 +451,12 @@ try
         for (i = 0; i < M.size(); i++)
             absM[i] = std::abs(M[i]);
 
-        
         tol = *max_element(absM.begin(), absM.end());
-
-        //cout << tol << endl;
-
         iter+=1;
     }    
 
     // Loadflow: Bus power injections, line & power flows
-
-    //cout << sumVector(V) << endl;
-    //cout << sumVector(del) << endl;
-
+    
     unsigned int nl=fb.size();
     
     vc Vm;

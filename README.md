@@ -4,6 +4,7 @@ C++ Newton Raphson power flow code for power systems
 This is the first attempt to publish C++ code related to power systems operation.   
 The aim is to create a benchmark library of emerging power system algorithms in order to evaluate them in any microprocessor platform. 
 
+<!---
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
@@ -27,10 +28,10 @@ There is no library to link to. The only thing that you need to keep in mind whe
 ```
 $ g++ -I /path/to/eigen/ my_program.cpp -o my_program 
 ```
-
+-->
 ### Source Download and Compilation
 
-After having all the required dependencies installed, acquire the source code by cloning the git repository:
+Acquire the source code by cloning the git repository:
 
 ```
 $ git clone https://github.com/harryskon/Newton-Raphson-Power-Flow.git
@@ -72,12 +73,7 @@ Important notes:
 
 ## Running the code
 
-The executable after compilation ```nrpowerflow``` takes up to two arguments.
-
-The first argument is the number(#) of IEEE-bus system.  
-
-The second argument (optional) is the number of runs the user would like to run the power flow code. 
-If this argument is not given by the user then the code runs only once. 
+The executable after compilation ```nrpowerflow``` takes one argument which is the number(#) of IEEE-bus system.  
 
 Example (IEEE 14-bus system):
 ```
