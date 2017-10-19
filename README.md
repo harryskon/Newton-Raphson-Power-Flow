@@ -77,7 +77,7 @@ The executable after compilation ```nrpowerflow``` takes one argument which is t
 
 Example (IEEE 14-bus system):
 ```
-$ ./estimation 14
+$ ./nrpowerflow 14
 ```
 
 ## Authors
