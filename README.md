@@ -1,4 +1,4 @@
-# Newton-Raphson-Power-Flow
+# Newton-Raphson-Power-Flow -- UNDER DEVELOPMENT
 C++ Newton Raphson power flow code for power systems
 
 This is the first attempt to publish C++ code related to power systems operation.   
