@@ -82,7 +82,7 @@ $ ./nrpowerflow 14
 
 ## Authors
 
-* **Harrys Kon** - [Personal Website](https://harrys.fyi/)
+* **Harrys Konstantinou** - [Website](https://dss-lab.github.io/)
 
 ## License
 
